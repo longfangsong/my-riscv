@@ -4,13 +4,11 @@
 `include "./memory/dataCache/dataCache.v"
 `include "./commands.v"
 
-
-
 module CPU(
   input wire        clk
 );
-  reg [31:0] program_counter = 32'h0;
-  reg [31:0] next_program_counter = 32'h0;
+  reg  [31:0] program_counter = 32'h0;
+  reg  [31:0] next_program_counter = 32'h0;
   wire [31:0] instruction;
   CommandCache commandCache(
     program_counter,
@@ -19,7 +17,7 @@ module CPU(
 
   wire        memory_write_enable;
   wire [2:0]  memory_io_width;
-  wire [32:0] memory_io_address;
+  wire [31:0] memory_io_address;
   wire [31:0] memory_out;
   wire [31:0] memory_in;
 
@@ -68,7 +66,7 @@ module CPU(
   assign register_2_select = instruction[24:20];
   assign register_save_select = instruction[11:7];
   
-  assign alu_func = (instruction[6:0] == `CALC_I || instruction[6:0] == `CALC_R) ? 4'b0000 : {instruction[30],instruction[14:12]};
+  assign alu_func = (instruction[6:0] == `CALC_I || instruction[6:0] == `CALC_R) ? {instruction[30],instruction[14:12]} : 4'b0000;
   assign alu_input_1 = (instruction[6:0] == `LUI   ) ? {instruction[31:12], 12'b0} :
                        (instruction[6:0] == `AUIPC ) ? ({instruction[31:12], 12'b0} + program_counter) :
                        (instruction[6:0] == `JAL || instruction[6:0] == `JALR) 
@@ -84,6 +82,9 @@ module CPU(
                        (instruction[6:0] == `CALC_I) ? {{20{instruction[31]}},instruction[31:20]} : 'bz;
 
   assign register_save_value = alu_output;
+  assign memory_in = alu_output;
+  assign memory_io_address = register_1_value + ((instruction[6:0] == `STORE) ? {instruction[31:25],instruction[11:7]} : {instruction[31:20]});
+  assign memory_io_width = instruction[14:12];
   assign memory_write_enable = (instruction[6:0] == `STORE);
   assign register_save_enable = (instruction[6:0] != `BRANCH && instruction[6:0] != `STORE);
   always @(posedge clk) begin

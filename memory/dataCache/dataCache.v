@@ -2,7 +2,7 @@ module DataCache(
   input  wire        clk,
   input  wire        write_en,
   input  wire [2:0]  width,
-  input  wire [32:0] full_address,
+  input  wire [31:0] full_address,
   output wire [31:0] out,
   input  wire [31:0] in
 );
@@ -16,7 +16,7 @@ module DataCache(
                (width == 'b101) ? {16'b0,registers[address+1],registers[address]} :
                {32'hzzzz_zzzz};
   always @(clk) begin
-    if (write_en == 0) begin
+    if (write_en == 1) begin
       registers[address] <= in[7:0];
       if (width == 'b001 || width == 'b010) begin
         registers[address+1] <= in[15:8];
